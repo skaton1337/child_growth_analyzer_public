@@ -14,7 +14,7 @@ from who_data import create_percentile_interpolators, calculate_exact_percentile
 class ChildGrowthAnalyzer:
     def __init__(self, root):
         self.root = root
-        self.root.title("Child Growth Analyzer v1.1.1 - by David Kühlwein")
+        self.root.title("Child Growth Analyzer v1.1.1 - by skaton1337")
         
         # Add last used directory tracking
         self.last_used_directory = os.path.dirname(os.path.abspath(__file__))
@@ -26,7 +26,7 @@ class ChildGrowthAnalyzer:
         try:
             # This is needed for Windows taskbar icon
             import ctypes
-            myappid = 'davidkuehlwein.childgrowthanalyzer.1.0.0'  # arbitrary string
+            myappid = 'skaton1337.childgrowthanalyzer.1.0.0'  # arbitrary string
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
             self.root.iconbitmap(default=icon_path)
         except Exception as e:
