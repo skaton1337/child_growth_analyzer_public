@@ -1,0 +1,6 @@
+# Empty requirements file ready for new dependencies 
+pandas
+matplotlib
+numpy
+pyinstaller
+scipy 
