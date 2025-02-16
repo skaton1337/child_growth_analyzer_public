@@ -1,7 +1,7 @@
 Child Growth Analyzer v1.1.1
 ===========================
 
-Author: David Kühlwein
+Author: skaton1337
 Copyright © 2025
 
 This application allows you to visualize and analyze child growth data.
