@@ -25,7 +25,7 @@ Age;Height
 1.5;82
 
 Usage:
-1. Launch ChildGrowthAnalyzer.exe or start the main.py file 
+1. Start the main.py file via "python main.py" 
 2. Click "Load Dataset" to load a CSV file
 3. Use "Add Data Point" to manually add measurements
 4. Save your work using "Save Dataset" or "Save Plot as JPEG"
