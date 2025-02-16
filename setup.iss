@@ -3,7 +3,7 @@
 
 #define MyAppName "Child Growth Analyzer"
 #define MyAppVersion "1.1.1"
-#define MyAppPublisher "David Kühlwein"
+#define MyAppPublisher "skaton1337"
 #define MyAppURL "https://www.example.com"
 #define MyAppExeName "ChildGrowthAnalyzer.exe"
 
