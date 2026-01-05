@@ -53,4 +53,4 @@ Requirements:
 - Windows 10/11
 - No additional software required
 
-For support or bug reports, please contact: [Your Contact Info] 
+For support or bug reports, please contact: David Kühlwein [kuehlwein.david@gmail.com]
