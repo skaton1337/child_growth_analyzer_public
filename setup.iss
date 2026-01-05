@@ -50,6 +50,8 @@ Source: "README.txt"; DestDir: "{app}"; Flags: ignoreversion isreadme
 Source: "app_icon.ico"; DestDir: "{app}"; Flags: ignoreversion
 ; WHO data files
 Source: "who_data\*"; DestDir: "{app}\who_data"; Flags: ignoreversion recursesubdirs createallsubdirs
+; Example data file
+Source: "data\example.csv"; DestDir: "{app}\data"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
