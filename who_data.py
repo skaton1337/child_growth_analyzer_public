@@ -6,9 +6,22 @@ Data source: World Health Organization (WHO) Child Growth Standards
 import pandas as pd
 from scipy.interpolate import interp1d
 import numpy as np
+import os
+import sys
+
+# Get the base directory - works both in development and when packaged
+if getattr(sys, 'frozen', False):
+    # Running as compiled executable (PyInstaller)
+    base_dir = sys._MEIPASS
+else:
+    # Running as script
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Construct relative paths to WHO data files
+boys_file = os.path.join(base_dir, 'who_data', 'hfa-boys-perc-who2007-exp.csv')
+girls_file = os.path.join(base_dir, 'who_data', 'hfa-girls-perc-who2007-exp.csv')
 
 # Read boys data
-boys_file = r"C:\Users\Skaton\Desktop\Enkeltsunami\who_data\hfa-boys-perc-who2007-exp.csv"
 boys_df = pd.read_csv(
     boys_file, 
     header=0,        # Skip the first row (header)
@@ -20,7 +33,6 @@ boys_df.columns = ['Age_months', 'P01', 'P1', 'P3', 'P5', 'P10', 'P15', 'P25', '
                    'P75', 'P85', 'P90', 'P95', 'P97', 'P99', 'P999']
 
 # Read girls data
-girls_file = r"C:\Users\Skaton\Desktop\Enkeltsunami\who_data\hfa-girls-perc-who2007-exp.csv"
 girls_df = pd.read_csv(
     girls_file, 
     header=0,        # Skip the first row (header)
