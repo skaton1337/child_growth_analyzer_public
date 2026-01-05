@@ -2,8 +2,8 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Child Growth Analyzer"
-#define MyAppVersion "1.1.1"
-#define MyAppPublisher "skaton1337"
+#define MyAppVersion "1.1.3"
+#define MyAppPublisher "David Kühlwein"
 #define MyAppURL "https://www.example.com"
 #define MyAppExeName "ChildGrowthAnalyzer.exe"
 
@@ -32,7 +32,7 @@ UninstallDisplayIcon={app}\{#MyAppExeName}
 VersionInfoVersion={#MyAppVersion}
 VersionInfoCompany={#MyAppPublisher}
 VersionInfoDescription=Child Growth Analysis and Visualization Tool
-VersionInfoCopyright=© 2024 {#MyAppPublisher}
+VersionInfoCopyright=© 2026 {#MyAppPublisher}
 VersionInfoProductName={#MyAppName}
 VersionInfoProductVersion={#MyAppVersion}
 

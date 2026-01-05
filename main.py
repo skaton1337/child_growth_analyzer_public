@@ -14,7 +14,7 @@ from who_data import create_percentile_interpolators, calculate_exact_percentile
 class ChildGrowthAnalyzer:
     def __init__(self, root):
         self.root = root
-        self.root.title("Child Growth Analyzer v1.1.1 - by skaton1337")
+        self.root.title("Child Growth Analyzer v1.1.3 - by David Kühlwein")
         
         # Add last used directory tracking
         self.last_used_directory = os.path.dirname(os.path.abspath(__file__))
@@ -26,7 +26,7 @@ class ChildGrowthAnalyzer:
         try:
             # This is needed for Windows taskbar icon
             import ctypes
-            myappid = 'skaton1337.childgrowthanalyzer.1.0.0'  # arbitrary string
+            myappid = 'davidkuehlwein.childgrowthanalyzer.1.0.0'  # arbitrary string
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
             self.root.iconbitmap(default=icon_path)
         except Exception as e:
@@ -79,7 +79,7 @@ class ChildGrowthAnalyzer:
         self.content_frame.grid_rowconfigure(0, weight=1)
         
         # Data storage
-        self.datasets = {}
+        self.datasets = {}  # Format: {name: {'df': DataFrame, 'birthdate': 'DD.MM.YYYY'}}
         self.colors = ['red', 'blue', 'green', 'purple', 'orange']
         
         # Create main containers
@@ -121,67 +121,59 @@ class ChildGrowthAnalyzer:
         # Add Age Calculator section (adjust row numbers)
         ttk.Label(control_frame, text="Age Calculator").grid(row=4, column=0, columnspan=2, pady=(20,5))
         
-        ttk.Label(control_frame, text="Birth Date (DD.MM.YYYY):").grid(row=5, column=0, padx=5, pady=5)
-        self.birth_date_entry = ttk.Entry(control_frame)
-        self.birth_date_entry.grid(row=5, column=1, padx=5, pady=5)
-        
-        ttk.Label(control_frame, text="Current Date (DD.MM.YYYY):").grid(row=6, column=0, padx=5, pady=5)
-        self.current_date_entry = ttk.Entry(control_frame)
-        # Set default to today's date
-        from datetime import datetime
-        today = datetime.now().strftime("%d.%m.%Y")
-        self.current_date_entry.insert(0, today)
-        self.current_date_entry.grid(row=6, column=1, padx=5, pady=5)
-        
-        # Calculate button and result display
-        ttk.Button(control_frame, text="Calculate Age", 
-                  command=self.calculate_age).grid(row=7, column=0, padx=5, pady=5)
-        
         self.age_result_var = tk.StringVar()
-        self.age_result_var.set("Age: -- years")
-        ttk.Label(control_frame, textvariable=self.age_result_var).grid(row=7, column=1, padx=5, pady=5)
+        self.age_result_var.set("Age: -- years (select a dataset)")
+        ttk.Label(control_frame, textvariable=self.age_result_var).grid(row=5, column=0, columnspan=2, padx=5, pady=5)
         
         # Separator
-        ttk.Separator(control_frame, orient='horizontal').grid(row=8, column=0, columnspan=2, sticky='ew', pady=10)
+        ttk.Separator(control_frame, orient='horizontal').grid(row=6, column=0, columnspan=2, sticky='ew', pady=10)
         
         # Dataset selection (adjust row numbers)
-        ttk.Label(control_frame, text="Active Dataset:").grid(row=9, column=0, padx=5, pady=5)
+        ttk.Label(control_frame, text="Active Dataset:").grid(row=7, column=0, padx=5, pady=5)
         self.dataset_combo = ttk.Combobox(control_frame, state='readonly')
-        self.dataset_combo.grid(row=9, column=1, padx=5, pady=5, sticky="ew")
+        self.dataset_combo.grid(row=7, column=1, padx=5, pady=5, sticky="ew")
         self.dataset_combo.bind('<<ComboboxSelected>>', lambda e: self.update_table_display())
         
+        # Birthdate display and edit (adjust row numbers)
+        ttk.Label(control_frame, text="Birthdate:").grid(row=8, column=0, padx=5, pady=5)
+        self.birthdate_display = ttk.Label(control_frame, text="--")
+        self.birthdate_display.grid(row=8, column=1, padx=5, pady=5, sticky="w")
+        ttk.Button(control_frame, text="Edit Birthdate", 
+                  command=self.edit_birthdate).grid(row=8, column=1, padx=5, pady=5, sticky="e")
+        
         # Manual data entry (adjust row numbers)
-        ttk.Label(control_frame, text="Add New Data Point").grid(row=10, column=0, columnspan=2, pady=(20,5))
+        ttk.Label(control_frame, text="Add New Data Point").grid(row=9, column=0, columnspan=2, pady=(20,5))
         
-        ttk.Label(control_frame, text="Age (years):").grid(row=11, column=0, padx=5, pady=5)
-        self.age_entry = ttk.Entry(control_frame)
-        self.age_entry.grid(row=11, column=1, padx=5, pady=5)
+        ttk.Label(control_frame, text="Age (years):").grid(row=10, column=0, padx=5, pady=5)
+        self.age_display_entry = ttk.Entry(control_frame, state='readonly')
+        self.age_display_entry.grid(row=10, column=1, padx=5, pady=5)
         
-        ttk.Label(control_frame, text="Height (cm):").grid(row=12, column=0, padx=5, pady=5)
+        ttk.Label(control_frame, text="Height (cm):").grid(row=11, column=0, padx=5, pady=5)
         self.height_entry = ttk.Entry(control_frame)
-        self.height_entry.grid(row=12, column=1, padx=5, pady=5)
+        self.height_entry.grid(row=11, column=1, padx=5, pady=5)
         
         ttk.Button(control_frame, text="Add Data Point", 
-                  command=self.add_data_point).grid(row=13, column=0, columnspan=2, pady=10)
+                  command=self.add_data_point).grid(row=12, column=0, columnspan=2, pady=10)
         
         # Data display (adjust row number)
         self.tree = ttk.Treeview(control_frame, columns=("Age", "Height"), show="headings")
         self.tree.heading("Age", text="Age (years)")
         self.tree.heading("Height", text="Height (cm)")
-        self.tree.grid(row=14, column=0, columnspan=2, pady=10, sticky="nsew")
+        self.tree.grid(row=13, column=0, columnspan=2, pady=10, sticky="nsew")
         
         # Scrollbar for treeview
         scrollbar = ttk.Scrollbar(control_frame, orient="vertical", command=self.tree.yview)
-        scrollbar.grid(row=14, column=2, sticky="ns")
+        scrollbar.grid(row=13, column=2, sticky="ns")
         self.tree.configure(yscrollcommand=scrollbar.set)
         
-        # Exit button at bottom left with proper cleanup
-        ttk.Button(control_frame, text="Exit", 
-                  command=self.quit_app).grid(row=15, column=0, padx=5, pady=10, sticky="sw")
-        
-        # Create custom style for exit button
+        # Create custom style for exit button (before creating the button)
         style = ttk.Style()
-        style.configure('Exit.TButton', foreground='red')
+        style.configure('Exit.TButton', foreground='red', font=('TkDefaultFont', 10, 'bold'))
+        
+        # Exit button at bottom left with proper cleanup (same size as Load Dataset button)
+        exit_button = ttk.Button(control_frame, text="Exit", 
+                                  command=self.quit_app, style='Exit.TButton')
+        exit_button.grid(row=14, column=0, columnspan=2, padx=5, pady=5, sticky="ew")
         
     def create_plot_frame(self):
         # Change parent to content_frame
@@ -240,7 +232,8 @@ class ChildGrowthAnalyzer:
         closest_point = None
         closest_dataset = None
         
-        for dataset_name, df in self.datasets.items():
+        for dataset_name, dataset_info in self.datasets.items():
+            df = dataset_info['df']
             for _, row in df.iterrows():
                 dist = ((event.xdata - row['Age'])**2 + 
                        (event.ydata - row['Height'])**2)**0.5
@@ -299,7 +292,28 @@ class ChildGrowthAnalyzer:
                     
                     # First read the file content to handle decimal delimiters
                     with open(file_path, 'r', encoding='utf-8') as f:
-                        content = f.read()
+                        lines = f.readlines()
+                    
+                    # Check if first line contains birthdate
+                    birthdate = None
+                    data_start = 0
+                    
+                    if lines and lines[0].strip().startswith('Birthdate'):
+                        # Extract birthdate from first line (format: Birthdate;DD.MM.YYYY)
+                        try:
+                            parts = lines[0].strip().split(';')
+                            if len(parts) >= 2:
+                                birthdate = parts[1].strip()
+                                # Validate date format
+                                datetime.strptime(birthdate, "%d.%m.%Y")
+                            data_start = 1
+                        except (ValueError, IndexError):
+                            # Invalid birthdate format, treat as old format
+                            birthdate = None
+                            data_start = 0
+                    
+                    # Join remaining lines for processing
+                    content = ''.join(lines[data_start:])
                     
                     # Replace commas with dots in numbers
                     # This regex looks for numbers with commas and replaces the comma with a dot
@@ -340,7 +354,23 @@ class ChildGrowthAnalyzer:
                                 f"Dataset '{dataset_name}' already exists. Do you want to replace it?"):
                                 return
                         
-                        self.datasets[dataset_name] = df
+                        # If no birthdate found, ask user for it
+                        if birthdate is None:
+                            birthdate = simpledialog.askstring("Birthdate", 
+                                f"Enter birthdate for {dataset_name} (DD.MM.YYYY):",
+                                parent=self.root)
+                            if birthdate:
+                                try:
+                                    datetime.strptime(birthdate, "%d.%m.%Y")
+                                except ValueError:
+                                    messagebox.showerror("Error", "Invalid date format. Please use DD.MM.YYYY")
+                                    birthdate = None
+                        
+                        # Store dataset with birthdate
+                        self.datasets[dataset_name] = {
+                            'df': df,
+                            'birthdate': birthdate
+                        }
                         self.update_dataset_combo()
                         self.update_display()
                         messagebox.showinfo("Success", f"Dataset '{dataset_name}' loaded successfully with {len(df)} data points")
@@ -374,7 +404,17 @@ class ChildGrowthAnalyzer:
             self.last_used_directory = os.path.dirname(file_path)
             
             try:
-                self.datasets[dataset_name].to_csv(file_path, sep=';', index=False)
+                dataset_info = self.datasets[dataset_name]
+                df = dataset_info['df']
+                birthdate = dataset_info.get('birthdate', None)
+                
+                # Write birthdate in first row if available
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    if birthdate:
+                        f.write(f"Birthdate;{birthdate}\n")
+                    # Write the dataframe
+                    df.to_csv(f, sep=';', index=False)
+                
                 messagebox.showinfo("Success", f"Dataset '{dataset_name}' saved successfully")
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to save dataset: {str(e)}")
@@ -382,8 +422,34 @@ class ChildGrowthAnalyzer:
     def clear_all(self):
         if messagebox.askyesno("Confirm", "Are you sure you want to clear all datasets?"):
             self.datasets.clear()
+            self.birthdate_display.config(text="--")
             self.update_dataset_combo()
             self.update_display()
+    
+    def edit_birthdate(self):
+        """Edit birthdate for the currently selected dataset"""
+        dataset_name = self.dataset_combo.get()
+        if not dataset_name:
+            messagebox.showerror("Error", "Please select a dataset")
+            return
+        
+        dataset_info = self.datasets[dataset_name]
+        current_birthdate = dataset_info.get('birthdate', '')
+        
+        new_birthdate = simpledialog.askstring("Edit Birthdate", 
+            f"Enter birthdate for {dataset_name} (DD.MM.YYYY):",
+            initialvalue=current_birthdate,
+            parent=self.root)
+        
+        if new_birthdate:
+            try:
+                # Validate date format
+                datetime.strptime(new_birthdate, "%d.%m.%Y")
+                dataset_info['birthdate'] = new_birthdate
+                # Update display and recalculate age
+                self.update_table_display()
+            except ValueError:
+                messagebox.showerror("Error", "Invalid date format. Please use DD.MM.YYYY")
     
     def add_data_point(self):
         dataset_name = self.dataset_combo.get()
@@ -391,21 +457,35 @@ class ChildGrowthAnalyzer:
             messagebox.showerror("Error", "Please select a dataset")
             return
         
+        dataset_info = self.datasets[dataset_name]
+        birthdate = dataset_info.get('birthdate', None)
+        
+        if not birthdate:
+            messagebox.showerror("Error", "Please set a birthdate for this dataset first")
+            return
+        
         try:
-            age = float(self.age_entry.get())
+            # Calculate age automatically from birthdate
+            from datetime import datetime
+            birth_date = datetime.strptime(birthdate, "%d.%m.%Y")
+            current_date = datetime.now()
+            age_days = (current_date - birth_date).days
+            age = age_days / 365.25  # Account for leap years
+            
+            # Get height from user input
             height = float(self.height_entry.get())
             
             new_data = pd.DataFrame({'Age': [age], 'Height': [height]})
-            self.datasets[dataset_name] = pd.concat([self.datasets[dataset_name], new_data], 
-                                                  ignore_index=True)
+            dataset_info['df'] = pd.concat([dataset_info['df'], new_data], 
+                                          ignore_index=True)
             
-            self.age_entry.delete(0, tk.END)
+            # Clear only height entry (age is auto-calculated)
             self.height_entry.delete(0, tk.END)
             
             self.update_display()
             
         except ValueError:
-            messagebox.showerror("Error", "Please enter valid numeric values")
+            messagebox.showerror("Error", "Please enter a valid height value")
     
     def update_dataset_combo(self):
         current = self.dataset_combo.get()
@@ -423,7 +503,19 @@ class ChildGrowthAnalyzer:
         # Get selected dataset
         dataset_name = self.dataset_combo.get()
         if dataset_name and dataset_name in self.datasets:
-            df = self.datasets[dataset_name]
+            dataset_info = self.datasets[dataset_name]
+            df = dataset_info['df']
+            birthdate = dataset_info.get('birthdate', None)
+            
+            # Update birthdate display
+            if birthdate:
+                self.birthdate_display.config(text=birthdate)
+            else:
+                self.birthdate_display.config(text="Not set")
+            
+            # Automatically calculate and update age
+            self.calculate_age()
+            
             # Sort by age before displaying
             df_sorted = df.sort_values('Age')
             for _, row in df_sorted.iterrows():
@@ -437,7 +529,8 @@ class ChildGrowthAnalyzer:
         self.ax.clear()
         
         # Plot each dataset with different colors
-        for i, (name, df) in enumerate(self.datasets.items()):
+        for i, (name, dataset_info) in enumerate(self.datasets.items()):
+            df = dataset_info['df']
             color = self.colors[i % len(self.colors)]
             
             # Plot scatter points
@@ -470,12 +563,34 @@ class ChildGrowthAnalyzer:
         self.canvas.draw()
 
     def calculate_age(self):
+        """Calculate age automatically from the selected dataset's birthdate"""
+        dataset_name = self.dataset_combo.get()
+        if not dataset_name or dataset_name not in self.datasets:
+            self.age_result_var.set("Age: -- years (select a dataset)")
+            self.age_display_entry.config(state='normal')
+            self.age_display_entry.delete(0, tk.END)
+            self.age_display_entry.insert(0, "--")
+            self.age_display_entry.config(state='readonly')
+            return
+        
+        dataset_info = self.datasets[dataset_name]
+        birthdate = dataset_info.get('birthdate', None)
+        
+        if not birthdate:
+            self.age_result_var.set("Age: -- years (birthdate not set)")
+            self.age_display_entry.config(state='normal')
+            self.age_display_entry.delete(0, tk.END)
+            self.age_display_entry.insert(0, "--")
+            self.age_display_entry.config(state='readonly')
+            return
+        
         try:
             from datetime import datetime
             
-            # Parse dates
-            birth_date = datetime.strptime(self.birth_date_entry.get(), "%d.%m.%Y")
-            current_date = datetime.strptime(self.current_date_entry.get(), "%d.%m.%Y")
+            # Parse birthdate
+            birth_date = datetime.strptime(birthdate, "%d.%m.%Y")
+            # Use current date
+            current_date = datetime.now()
             
             # Calculate age
             age_days = (current_date - birth_date).days
@@ -484,12 +599,18 @@ class ChildGrowthAnalyzer:
             # Update result with 2 decimal places
             self.age_result_var.set(f"Age: {age_years:.2f} years")
             
-            # Automatically fill the age entry field
-            self.age_entry.delete(0, tk.END)
-            self.age_entry.insert(0, f"{age_years:.2f}")
+            # Update age display entry
+            self.age_display_entry.config(state='normal')
+            self.age_display_entry.delete(0, tk.END)
+            self.age_display_entry.insert(0, f"{age_years:.2f}")
+            self.age_display_entry.config(state='readonly')
             
         except ValueError as e:
-            messagebox.showerror("Error", "Please enter dates in DD.MM.YYYY format")
+            self.age_result_var.set("Age: -- years (invalid birthdate format)")
+            self.age_display_entry.config(state='normal')
+            self.age_display_entry.delete(0, tk.END)
+            self.age_display_entry.insert(0, "--")
+            self.age_display_entry.config(state='readonly')
 
     def quit_app(self):
         """Properly close the application"""
